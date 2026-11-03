@@ -387,7 +387,7 @@ body.booting .overlay,body.booting .btxt{visibility:hidden}
         <div>剩餘水球 <b id="leftN">0</b></div>
       </div>
       <div class="farm-wrap" id="farmWrap">
-        <canvas id="farm" width="180" height="270" aria-label="農田遊戲畫面：點擊天上的水球作答"></canvas>
+        <canvas id="farm" width="180" height="270" aria-label="農田遊戲畫面：點擊畫面上的水球作答"></canvas>
         <div class="rbanner" id="rBanner" hidden role="status" aria-live="assertive"><b id="rTitle"></b><span id="rDetail"></span></div>
         <div class="qdlg" id="qdlg" hidden role="dialog" aria-modal="true" aria-labelledby="qText">
           <div class="qbox">
@@ -470,9 +470,9 @@ const DEFAULT_SITE = {
   banners: { home: "嘉禾益 產銷履歷高麗菜 食農教育闖關體驗", quiz: "嘉禾益 產銷履歷高麗菜 食農教育闖關體驗", result: "嘉禾益 產銷履歷高麗菜 食農教育闖關體驗" },
   home: {
     textTone: "auto", // 首頁底圖上的文字顏色：auto 自動／dark 深色字／light 白色字
-    title: "水球澆灌高麗菜", subtitle: "點擊天上的水球回答食農問題，答對就能澆灌高麗菜苗！累積答對 5 題，高麗菜就能收成，還能獲得專屬兌換序號。", button: "開始遊戲",
+    title: "水球澆灌高麗菜", subtitle: "點擊畫面上的水球回答食農問題，答對就能澆灌高麗菜苗！累積答對 5 題，高麗菜就能收成，還能獲得專屬兌換序號。", button: "開始遊戲",
     soldOutNotice: "兌換序號已全數發放完畢！闖關通過將無兌換序號。",
-    shareSubtitle: "分享體驗版：歡迎自由挑戰，本頁面不提供兌換序號。",
+    shareSubtitle: "分享體驗版：歡迎自由挑戰。",
     credits: "指導單位｜農業部農村發展及水土保持署　主辦單位｜嘉禾益企業有限公司"
   },
   result: {
@@ -877,7 +877,7 @@ function applySite(){
   $(".overlay .sub").textContent = NO_SERIAL ? site.home.shareSubtitle : (out ? site.home.soldOutNotice : site.home.subtitle);
   $(".overlay .sub").classList.toggle("soldout", out && !NO_SERIAL);
   const rules = $("#rules"); rules.innerHTML = "";
-  ([`點擊天上的水球，每顆水球都是一道食農題目`,
+  ([`點擊畫面上的水球，每顆水球都是一道食農題目`,
     `答對才有水可以澆灌高麗菜；答錯：變成氣球破掉，高麗菜不會長大`,
     `累積答對 ${site.questionCount} 題，高麗菜就能收成${(out || NO_SERIAL) ? "" : "，並獲得專屬兌換序號"}`,
     (out || NO_SERIAL) ? "可重複挑戰" : "可重複挑戰，但只能兌換一次序號"]).forEach(t => { const li=document.createElement("li"); li.textContent=t; rules.appendChild(li); });
@@ -1162,7 +1162,7 @@ function buildQuiz(){
            player: { x: HOME_X, y: GROUND - PH, face: 1, pose: "idle" } };
   SLOTS.forEach((_, i) => { const b = spawnBalloon(i); if(b) b.enter = -i * 0.05; });   // 由上往下陸續飄入
   $("#qdlg").hidden = true; $("#farmWrap").querySelectorAll(".ftext").forEach(e => e.remove());
-  $("#gameHint").textContent = "點擊天上的水球，舉劍挑戰食農題目！";
+  $("#gameHint").textContent = "點擊畫面上的水球，舉劍挑戰食農題目！";
   updateHud(); game.raf = requestAnimationFrame(gameLoop);
 }
 function stopGame(){ if(game){ game.running = false; cancelAnimationFrame(game.raf); } }
