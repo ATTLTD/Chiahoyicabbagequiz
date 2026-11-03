@@ -570,22 +570,24 @@ function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function pad(n,d){ return String(n).padStart(d,"0"); }
 
-/* 裝置識別：localStorage + cookie 雙重保存的隨機裝置碼 */
+/* 裝置識別：localStorage + cookie 雙重保存的隨機裝置碼。
+   儲存名稱一律加上「chahoyi_cabbage_」前綴：同網域（attltd.github.io）的其他遊戲（如國產雜糧）使用相同的瀏覽器儲存空間，
+   沒有前綴會互相讀到對方的作答紀錄與序號。 */
 function getDeviceId(){
-  let id = lsGet("quiz_device_id") || cookieGet("qdid");
+  let id = lsGet("chahoyi_cabbage_device_id") || cookieGet("chahoyi_cabbage_qdid");
   if(!id){ id = uuid(); }
-  lsSet("quiz_device_id", id); cookieSet("qdid", id);
+  lsSet("chahoyi_cabbage_device_id", id); cookieSet("chahoyi_cabbage_qdid", id);
   return id;
 }
 function getLocalRecord(){
-  const raw = lsGet("quiz_record") || cookieGet("qrec");
+  const raw = lsGet("chahoyi_cabbage_record") || cookieGet("chahoyi_cabbage_qrec");
   try{ return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
 }
 function setLocalRecord(rec){
-  lsSet("quiz_record", JSON.stringify(rec));
-  const {review, ...slim} = rec; cookieSet("qrec", JSON.stringify(slim)); // cookie 容量有限，不存逐題明細
+  lsSet("chahoyi_cabbage_record", JSON.stringify(rec));
+  const {review, ...slim} = rec; cookieSet("chahoyi_cabbage_qrec", JSON.stringify(slim)); // cookie 容量有限，不存逐題明細
 }
-function clearLocalRecord(){ lsDel("quiz_record"); cookieDel("qrec"); }
+function clearLocalRecord(){ lsDel("chahoyi_cabbage_record"); cookieDel("chahoyi_cabbage_qrec"); }
 
 /* 圖片壓縮：轉 JPEG 並控制大小（存放上限約 240KB） */
 function compressImage(file, maxW){
@@ -639,14 +641,14 @@ function localBackend(){
   return {
     mode:"local", canEdit: new URLSearchParams(location.search).get("admin")==="1",
     async getRecord(){ return getLocalRecord(); },
-    async getStatus(){ const issued = Number(lsGet("quiz_demo_counter")||0); return {issued, limit: site.serialLimit}; },
+    async getStatus(){ const issued = Number(lsGet("chahoyi_cabbage_demo_counter")||0); return {issued, limit: site.serialLimit}; },
     async submit(rate, passed, review){
       const prev = getLocalRecord();
       let newSerial = null, soldOut = false;
       if(passed && !(prev && prev.serial != null)){
-        const issued = Number(lsGet("quiz_demo_counter")||0);
+        const issued = Number(lsGet("chahoyi_cabbage_demo_counter")||0);
         if(issued >= site.serialLimit) soldOut = true;
-        else { newSerial = issued + 1; lsSet("quiz_demo_counter", String(newSerial)); }
+        else { newSerial = issued + 1; lsSet("chahoyi_cabbage_demo_counter", String(newSerial)); }
       }
       const rec = nextRecord(prev, rate, passed, review, newSerial, soldOut);
       setLocalRecord(rec); return rec;
@@ -654,13 +656,13 @@ function localBackend(){
     async resetMine(){ clearLocalRecord(); },
     async loadSite(){
       let cfg = null, imgs = {};
-      try{ cfg = JSON.parse(lsGet("quiz_site_cfg")||"null"); }catch(e){}
-      try{ imgs = JSON.parse(lsGet("quiz_site_imgs")||"{}"); }catch(e){}
+      try{ cfg = JSON.parse(lsGet("chahoyi_cabbage_site_cfg")||"null"); }catch(e){}
+      try{ imgs = JSON.parse(lsGet("chahoyi_cabbage_site_imgs")||"{}"); }catch(e){}
       return {cfg, imgs};
     },
     async saveSite(cfg, imgs){
-      lsSet("quiz_site_cfg", JSON.stringify(cfg));
-      if(!lsSet("quiz_site_imgs", JSON.stringify(imgs))) throw new Error("圖片太大，瀏覽器儲存空間不足");
+      lsSet("chahoyi_cabbage_site_cfg", JSON.stringify(cfg));
+      if(!lsSet("chahoyi_cabbage_site_imgs", JSON.stringify(imgs))) throw new Error("圖片太大，瀏覽器儲存空間不足");
     }
   };
 }
@@ -806,7 +808,7 @@ async function initBackend(){
    ========================================================= */
 let backend = null;
 let backendReady = Promise.resolve(null); // 後端連線完成的 Promise（送出答案前會等待）
-const SITE_CACHE_KEY = "quiz_site_cache_v1";
+const SITE_CACHE_KEY = "chahoyi_cabbage_site_cache_v1";
 function readSiteCache(){ try{ return JSON.parse(lsGet(SITE_CACHE_KEY) || "null"); }catch(e){ return null; } }
 function writeSiteCache(o){ lsSet(SITE_CACHE_KEY, JSON.stringify(o)); }
 let site = deepMerge(clone(DEFAULT_SITE), CONFIG.siteOverrides);
@@ -1733,7 +1735,7 @@ function renderAdmin(){
   }));
   $("#adminBody").querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { delete draftImgs[b.dataset.rm]; changedImgs.add(b.dataset.rm); renderAdmin(); }));
   const ki = $("#adminKeyInp");
-  if(ki) ki.addEventListener("input", () => { backend.adminKey = ki.value; try{ sessionStorage.setItem("quiz_admin_key", ki.value); }catch(e){} });
+  if(ki) ki.addEventListener("input", () => { backend.adminKey = ki.value; try{ sessionStorage.setItem("chahoyi_cabbage_admin_key", ki.value); }catch(e){} });
   if(backend.sheetQuestions) return;
   $("#qExport").onclick = () => { $("#qjson").value = JSON.stringify(qs, null, 1); };
   $("#qReset").onclick = () => { draft.questions = null; renderAdmin(); qmsg("已改回內建範例題庫，按「儲存變更」生效。", true); };
@@ -1853,7 +1855,7 @@ applySite();
 
 backendReady = (async () => {
   backend = await initBackend();
-  if(backend.mode === "api"){ try{ backend.adminKey = sessionStorage.getItem("quiz_admin_key") || ""; }catch(e){} }
+  if(backend.mode === "api"){ try{ backend.adminKey = sessionStorage.getItem("chahoyi_cabbage_admin_key") || ""; }catch(e){} }
   // 版面設定與作答紀錄同時載入
   const siteTask = (async () => {
     try{
