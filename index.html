@@ -12,7 +12,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://attltd.github.io/Chiahoyi/?mode=share">
 <meta property="og:title" content="產銷履歷高麗菜 食農教育闖關體驗｜嘉禾益">
-<meta property="og:description" content="用食農知識戳破水球、澆灌高麗菜！答對 5 題就能收成。">
+<meta property="og:description" content="用食農知識澆灌高麗菜！答對 5 題就能收成。">
 <meta property="og:image" content="https://attltd.github.io/Chiahoyi/og-image-cabbage.jpg">
 <meta property="og:image:secure_url" content="https://attltd.github.io/Chiahoyi/og-image-cabbage.jpg">
 <meta property="og:image:width" content="1200">
@@ -878,9 +878,9 @@ function applySite(){
   $(".overlay .sub").classList.toggle("soldout", out && !NO_SERIAL);
   const rules = $("#rules"); rules.innerHTML = "";
   ([`點擊天上的水球，每顆水球都是一道食農題目`,
-    `答對：水球裡的水會澆灌高麗菜；答錯：水球破掉，高麗菜不會長大`,
+    `答對才有水可以澆灌高麗菜；答錯：變成氣球破掉，高麗菜不會長大`,
     `累積答對 ${site.questionCount} 題，高麗菜就能收成${(out || NO_SERIAL) ? "" : "，並獲得專屬兌換序號"}`,
-    (out || NO_SERIAL) ? "可重複挑戰" : "可重複挑戰，但每支手機只能獲得一次兌換序號"]).forEach(t => { const li=document.createElement("li"); li.textContent=t; rules.appendChild(li); });
+    (out || NO_SERIAL) ? "可重複挑戰" : "可重複挑戰，但只能兌換一次序號"]).forEach(t => { const li=document.createElement("li"); li.textContent=t; rules.appendChild(li); });
   updateStartBtn();
   if(record) renderResult(record, false);
 }
