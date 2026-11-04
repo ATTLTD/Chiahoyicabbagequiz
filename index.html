@@ -488,6 +488,7 @@ const DEFAULT_SITE = {
   },
   share: {
     url: "", text: "我在「{title}」用食農知識成功種出一顆高麗菜！你也來挑戰看看：",
+    shortUrl: "https://reurl.cc/YmAj74", // 分享用縮網址：有填寫時，所有分享一律使用此網址（不附加任何參數）
     toNoSerial: true, // true：分享出去的連結導向不發序號的體驗版
     previewVersion: "1", // 結果預覽頁網址加上 ?v=版本號（啟用結果預覽頁時使用）
     resultPages: false,  // 是否使用 r/0.html～r/100.html 結果預覽頁（需另外製作並上傳 r 資料夾）
@@ -1489,6 +1490,8 @@ function renderReview(list){
 }
 
 function shareUrl(){
+  const short = String(site.share.shortUrl || "").trim();
+  if(/^https?:\/\//i.test(short)) return short;          // 分享用縮網址優先，原封不動使用
   const base = site.share.url || location.href.split("#")[0].split("?")[0];
   if(!site.share.toNoSerial || CONFIG.noSerial) return base;
   try{ const u = new URL(base); u.searchParams.set("mode", "share"); return u.toString(); }
@@ -1669,6 +1672,7 @@ function renderAdmin(){
     <fieldset class="fs"><legend>基本設定</legend>
       ${field("遊戲名稱（用於分享文字與分享圖）","gameTitle")}
       ${field("分享連結網址（留空則使用目前網址）","share.url")}
+      ${field("分享用縮網址（填寫後所有分享都使用此網址；留空則使用上方網址）","share.shortUrl")}
       <label class="field" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="checkbox" id="toNoSerial" ${draft.share.toNoSerial ? "checked" : ""} style="width:20px;height:20px">
         <span style="font-size:14px">分享連結導向「體驗版」（不發序號，網址會自動加上 ?mode=share）</span></label>
       <label class="field" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="checkbox" id="resultPages" ${draft.share.resultPages ? "checked" : ""} style="width:20px;height:20px">
