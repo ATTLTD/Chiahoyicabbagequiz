@@ -882,6 +882,17 @@ const NO_SERIAL = !!CONFIG.noSerial || new URLSearchParams(location.search).get(
 /* 是否發放兌換序號：體驗版一律不發；正式版依編輯模式的「發放兌換序號」設定 */
 /* 顯示用序號：前綴文字＋補零的號碼（例：CB＋001 → CB001）；後端與試算表仍只記錄數字 */
 function fmtSerial(n){ return String(site.serialPrefix || "").trim().slice(0, 10) + pad(n, site.serialDigits); }
+/* 首頁副標題：依「發放兌換序號」設定同步顯示或隱藏提到序號的句子
+   ‧ 發放序號：照編輯版面寫的副標題顯示
+   ‧ 不發序號：自動移除副標題中提到「序號」的子句（例：「，還能獲得專屬兌換序號。」→「。」） */
+function subtitleWithoutSerial(text){
+  let t = String(text || "");
+  t = t.replace(/[，,；;]?[^，,。！!？?；;]*序號[^，,。！!？?；;]*/g, "");   // 移除含「序號」的子句（連同前面的逗號）
+  t = t.replace(/^[，,；;。！!？?\s]+/, "");                              // 子句在開頭時，清除殘留的標點
+  t = t.replace(/([。！!？?])[。！!？?，,]+/g, "$1");                        // 合併重複的句尾標點
+  t = t.replace(/[，,；;]+$/, "。");                                        // 句尾若剩逗號，改為句號
+  return t.trim();
+}
 function serialOn(){ return !NO_SERIAL && site.serialEnabled !== false; }
 let record = null;     // 已作答紀錄
 let serialStatus = null; // {issued, limit}：已發出數量與上限
@@ -942,7 +953,7 @@ function applySite(){
     const [a,b] = el.dataset.t.split("."); el.textContent = site[a][b];
   });
   const out = soldOut();
-  $(".overlay .sub").textContent = NO_SERIAL ? site.home.shareSubtitle : (out ? site.home.soldOutNotice : site.home.subtitle);
+  $(".overlay .sub").textContent = NO_SERIAL ? site.home.shareSubtitle : (out ? site.home.soldOutNotice : (serialOn() ? site.home.subtitle : subtitleWithoutSerial(site.home.subtitle)));
   $(".overlay .sub").classList.toggle("soldout", out && !NO_SERIAL);
   const rules = $("#rules"); rules.innerHTML = "";
   ([`點擊畫面上的水球，每顆水球都是一道食農題目`,
@@ -1883,14 +1894,14 @@ async function copyConfig(){
    ‧ 填答內容送到後端，存在 Google 試算表的 survey 工作表；不收集姓名、電話等個人資料
    ‧ 網路不穩時答案會先存在手機上，下次開啟遊戲時自動補送 */
 const SURVEY = [
-  { id: "q1", type: "scale", text: "請問您今天試吃的「嘉禾益金漬泡菜」，您認為好吃程度是多少？", note: "5 分為滿分", ends: ["1 分", "5 分"] },
+  { id: "q1", type: "scale", text: "請問您今天試吃的「嘉禾益金漬泡菜」，您認為好吃程度是多少？", note: "5 分為滿分", ends: ["1 分", "5 分"], label: "好吃程度(5分為滿分)" },
   { id: "q2", type: "multi", text: "請問您認為今天試吃的「嘉禾益金漬泡菜」來做什麼料理會好吃？", note: "可複選",
-    options: ["直接當小菜吃", "煮火鍋", "炒肉類", "炒飯/炒麵", "粥/湯麵", "煎餅", "切碎當水餃等麵食的餡料"], other: "其他（請填寫）" },
+    options: ["直接當小菜吃", "煮火鍋", "炒肉類", "炒飯/炒麵", "粥/湯麵", "煎餅", "切碎當水餃等麵食的餡料"], other: "其他（請填寫）", label: "適合的料理" },
   { id: "q3", type: "single", text: "請問您以前聽過「嘉禾益」嗎？", note: "來自雲林，是八方雲集、王品集團、梁社漢、野村烤肉等 20 幾家餐飲業的供應商之一",
-    options: ["確定聽過", "確定沒聽過", "不確定"] },
-  { id: "q4", type: "scale", text: "請問如果餐飲業者使用您今天試吃的「嘉禾益金漬泡菜」來做料理（例如火鍋、炒飯），吸引您購買的程度是多少？", note: "5 分是非常吸引", ends: ["1 分", "5 分（非常吸引）"] },
+    options: ["確定聽過", "確定沒聽過", "不確定"], label: "是否聽過嘉禾益" },
+  { id: "q4", type: "scale", text: "請問如果餐飲業者使用您今天試吃的「嘉禾益金漬泡菜」來做料理（例如火鍋、炒飯），吸引您購買的程度是多少？", note: "5 分是非常吸引", ends: ["1 分", "5 分（非常吸引）"], label: "吸引購買程度(5分為非常吸引)" },
   { id: "q5", type: "single", text: "您今天試吃的「嘉禾益金漬泡菜」目前只提供給餐飲業者、沒有對一般消費者零售，請問您會希望它在餐廳零售嗎？",
-    options: ["會", "不會", "還好"] }
+    options: ["會", "不會", "還好"], label: "是否希望餐廳零售" }
 ];
 const SURVEY_DONE_KEY = "chahoyi_cabbage_survey_done", SURVEY_PENDING_KEY = "chahoyi_cabbage_survey_pending";
 
@@ -1952,7 +1963,8 @@ function renderSurvey(){
 function collectSurvey(){
   const ans = {}, errors = [];
   const defs = surveyDef();
-  ans._meta = defs.map(q => ({ text: q.text, type: q.type }));   // 題目內容一併送出，後端依此建立欄位
+  // 題目與「填答結果標題」一併送出，後端依此建立 survey 工作表的欄位
+  ans._meta = defs.map(q => ({ text: q.text, type: q.type, label: q.label || "", other: !!q.other, otherLabel: q.otherLabel || "" }));
   defs.forEach(q => {
     const checked = [...document.querySelectorAll(`#svQuestions input[name="${q.id}"]:checked`)].map(i => i.value);
     let msg = "";
