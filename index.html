@@ -805,6 +805,9 @@ function apiBackend(){
       let cfg = j.cfg || null;
       if(Array.isArray(j.questions) && j.questions.length){ cfg = {...(cfg||{}), questions: j.questions}; this.sheetQuestions = true; }
       if(Array.isArray(j.survey) && j.survey.length){ cfg = {...(cfg||{}), surveyQuestions: j.survey}; this.sheetSurvey = true; }
+      // 序號設定以試算表 serial_settings 為準（直接修改試算表也會反映在遊戲與編輯版面）
+      if(typeof j.serialEnabled === "boolean") cfg = {...(cfg||{}), serialEnabled: j.serialEnabled};
+      if(Number(j.limit) > 0) cfg = {...(cfg||{}), serialLimit: Number(j.limit)};
       return {cfg, imgs: j.imgs || {}};
     },
     async saveSite(cfg, imgs){
