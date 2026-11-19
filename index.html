@@ -1338,8 +1338,9 @@ function popBalloon(bx, by, b){
   for(let i = 0; i < 6; i++) game.particles.push({ x: bx, y: by + 8 + i, vx: 0, vy: 10, g: 160, life: .6, max: .6, size: 1, color: "#8AA3B5" });
 }
 
-/* 答題結果：答對→水滴從水球位置落到菜苗上、菜苗長大；答錯→水球破掉。特效結束後才顯示結果文字 */
+/* 答題結果：答對→水滴從水球位置落到菜苗上、菜苗長大；答錯→水球破掉。先顯示答題結果文字，文字消失後才播放水球破掉的動畫 */
 async function resolveBalloon(b, right, answerText){
+  await showResultBanner(right, answerText);
   const bx = b.x + 5.5, by = balloonY(b, game.t) + 7;
   b.state = "gone";
   popBalloon(bx, by, b);
@@ -1364,11 +1365,9 @@ async function resolveBalloon(b, right, answerText){
     }
     floatText(CAB_X, CAB_Y - 34, game.correct >= game.goal ? "成熟了！" : `長大了！ ${game.correct}/${game.goal}`, "grow");
     await tween(450, () => {});
-    await showResultBanner(true);
   }else{
     floatText(bx, by - 8, "啪！", "ng");
-    await tween(620, () => {});                    // 先讓破裂特效播完
-    await showResultBanner(false, answerText);
+    await tween(620, () => {});                    // 讓破裂特效播完
   }
   updateHud();
   if(game.correct >= game.goal){ await harvestCabbage(); return; }
